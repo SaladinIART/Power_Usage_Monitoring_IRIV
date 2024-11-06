@@ -1,0 +1,19 @@
+{
+    "modbus": {
+        "port": "/dev/ttyUSB0",
+        "slave_address": 1
+    },
+    "database": {
+        "server": "192.168.0.226",
+        "database": "Power_Usage_Alumac",
+        "user": "sa",
+        "password": "password"
+    },
+    "save_csv": true,
+    "csv": {
+        "folder_path": "/home/pi/Desktop/PUA_Office/PUA/rx380_daily_logs"
+    },
+    "retry_attempts": 5,
+    "reading_interval_normal": 10,
+    "reading_interval_high": 30
+}
