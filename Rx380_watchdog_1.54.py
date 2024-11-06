@@ -26,14 +26,12 @@ class RX380:
         self.instrument.mode = minimalmodbus.MODE_RTU
 
     async def read_data(self):
-        # Method to read sensor data (similar to previous version)
-        # Skipping detailed implementation for brevity
-        # Populate a dictionary `data` with required fields
+        # Example data fetching method
         data = {}
-        # Populate `data` with real readings, for example:
-        data['voltage_l1'] = await self.read_scaled_value(4034, 0.1)  # Example voltage reading
-        data['voltage_l2'] = await self.read_scaled_value(4036, 0.1)
-        # Add other fields as needed for your project
+        # Populate `data` with real readings (this should be customized as needed)
+        data['voltage_l1'] = await asyncio.to_thread(self.instrument.read_register, 4034, 0.1)
+        data['voltage_l2'] = await asyncio.to_thread(self.instrument.read_register, 4036, 0.1)
+        # Add other fields based on your project requirements
         return data
 
 class DataManager:
@@ -112,17 +110,19 @@ async def main():
         while True:
             data = await rx380.read_data()
             if data:
-                # Check if the current time is at a 10-minute interval
+                # Check if current time is on a 10-minute interval (e.g., :00, :10, :20)
                 current_minute = datetime.now().minute
-                if current_minute % 10 == 0:  # Only save at 0th, 10th, 20th... minute
+                if current_minute % 10 == 0:
+                    # Delay to the next interval if program started at an odd time
+                    while datetime.now().minute % 10 != 0:
+                        await asyncio.sleep(1)  # Check every second until the next 10-minute mark
+                    
                     data['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     
                     # Save data to SQL and optionally to CSV
                     await data_manager.save_to_sql(data)
                     await data_manager.save_to_csv(data)
-                    logging.info(f"Data saved at 10-minute interval ({current_minute} min)")
-                else:
-                    logging.info(f"Skipped data save - Not at 10-minute interval ({current_minute} min)")
+                    logging.info(f"Data saved at standardized 10-minute interval")
 
             await asyncio.sleep(10)  # Read data every 10 seconds
 
